@@ -1,0 +1,6 @@
+{
+  "title": "Development Game",
+  "system": "gba",
+  "core": "libmgba_libretro_android.so",
+  "rom": "rom.gba"
+}

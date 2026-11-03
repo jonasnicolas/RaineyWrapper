@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Placeholder gamepad glyph; the builder replaces launcher icons per game. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <path android:fillColor="#FFFFFF"
+        android:pathData="M34,42h40a12,12 0,0 1,12 12v4a12,12 0,0 1,-12 12h-40a12,12 0,0 1,-12 -12v-4a12,12 0,0 1,12 -12z" />
+    <path android:fillColor="#000000"
+        android:pathData="M36,52h4v-4h4v4h4v4h-4v4h-4v-4h-4z M68,50a3,3 0,1 1,0.01 0z M74,56a3,3 0,1 1,0.01 0z" />
+</vector>

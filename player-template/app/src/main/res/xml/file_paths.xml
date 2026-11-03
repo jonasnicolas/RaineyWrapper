@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Lets external emulators (PS2) open the game file through a content:// URI this app grants them. -->
+<paths>
+    <root-path name="storage" path="/storage" />
+</paths>

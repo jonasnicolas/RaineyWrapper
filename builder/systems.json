@@ -1,0 +1,216 @@
+{
+  "_comment": "Maps ROM file extensions to a system. 'core' is the libretro buildbot core name (cores/fetch_cores.sh <core>). When an extension belongs to several systems, the one whose 'folders' contains the ROM's folder name wins, else the first listed. 'external' systems have no bundled core: the game app launches an installed emulator app instead (on-device converter only). 'bios' lists optional BIOS file names (relative to the core's system folder) that the on-device converter bundles when it finds them in a bios folder. An external emulator with \"uri\": \"path\" gets the plain file path instead of a content:// URI (NetherSX2 checks the file exists by path). 'publicCore' replaces a non-commercially licensed core with a GPL-compatible one in the public (distributable) build of the converter: ./raineywrapper converter --public. A 'bios' entry may end in '*.bin' (any matching file is accepted, e.g. PS2 BIOS dumps have model-specific names); 'biosRequired' means the game can't start without one. Files named '*.xiso.iso' are treated as extension 'xiso' (Xbox), wherever they are.",
+  "systems": {
+    "gba": {
+      "name": "Game Boy Advance",
+      "core": "mgba",
+      "extensions": [
+        "gba"
+      ],
+      "folders": [
+        "gba",
+        "gameboyadvance"
+      ]
+    },
+    "gb": {
+      "name": "Game Boy / Game Boy Color",
+      "core": "mgba",
+      "extensions": [
+        "gb",
+        "gbc",
+        "sgb"
+      ],
+      "folders": [
+        "gb",
+        "gbc",
+        "gameboy",
+        "gameboycolor"
+      ]
+    },
+    "psx": {
+      "name": "PlayStation",
+      "core": "pcsx_rearmed",
+      "extensions": [
+        "cue",
+        "chd",
+        "pbp"
+      ],
+      "disc": true,
+      "folders": [
+        "psx",
+        "ps1",
+        "playstation",
+        "psone"
+      ],
+      "bios": [
+        "scph5501.bin",
+        "scph1001.bin",
+        "scph7001.bin",
+        "scph101.bin"
+      ]
+    },
+    "snes": {
+      "name": "Super Nintendo",
+      "core": "snes9x",
+      "extensions": [
+        "sfc",
+        "smc",
+        "swc",
+        "fig"
+      ],
+      "folders": [
+        "snes",
+        "sfc",
+        "superfamicom",
+        "supernintendo"
+      ],
+      "publicCore": "bsnes"
+    },
+    "genesis": {
+      "name": "Sega Genesis / Mega Drive",
+      "core": "genesis_plus_gx",
+      "extensions": [
+        "md",
+        "gen",
+        "smd",
+        "bin"
+      ],
+      "folders": [
+        "genesis",
+        "megadrive",
+        "md"
+      ],
+      "publicCore": "clownmdemu"
+    },
+    "sms": {
+      "name": "Sega Master System",
+      "core": "genesis_plus_gx",
+      "extensions": [
+        "sms"
+      ],
+      "folders": [
+        "sms",
+        "mastersystem"
+      ],
+      "publicCore": "smsplus"
+    },
+    "gg": {
+      "name": "Sega Game Gear",
+      "core": "genesis_plus_gx",
+      "extensions": [
+        "gg"
+      ],
+      "folders": [
+        "gg",
+        "gamegear"
+      ],
+      "publicCore": "smsplus"
+    },
+    "n64": {
+      "name": "Nintendo 64",
+      "core": "mupen64plus_next_gles3",
+      "extensions": [
+        "n64",
+        "z64",
+        "v64"
+      ],
+      "folders": [
+        "n64",
+        "nintendo64"
+      ]
+    },
+    "dreamcast": {
+      "name": "Sega Dreamcast",
+      "core": "flycast",
+      "extensions": [
+        "chd",
+        "cdi",
+        "gdi",
+        "cue"
+      ],
+      "folders": [
+        "dreamcast",
+        "dc"
+      ],
+      "disc": true,
+      "bios": [
+        "dc/dc_boot.bin",
+        "dc/dc_flash.bin"
+      ]
+    },
+    "ps2": {
+      "name": "PlayStation 2",
+      "core": "pcsx2",
+      "extensions": [
+        "iso",
+        "chd",
+        "cso",
+        "cue"
+      ],
+      "folders": [
+        "ps2",
+        "playstation2"
+      ],
+      "disc": true,
+      "bios": [
+        "pcsx2/bios/*.bin"
+      ],
+      "biosRequired": true
+    },
+    "psp": {
+      "name": "PlayStation Portable",
+      "core": "ppsspp",
+      "extensions": [
+        "iso",
+        "cso",
+        "pbp",
+        "chd"
+      ],
+      "folders": [
+        "psp"
+      ],
+      "disc": true
+    },
+    "gamecube": {
+      "name": "GameCube",
+      "core": "dolphin",
+      "extensions": [
+        "iso",
+        "rvz",
+        "gcm",
+        "gcz",
+        "ciso"
+      ],
+      "folders": [
+        "gc",
+        "gamecube",
+        "ngc",
+        "wii&ngc",
+        "wiingc"
+      ],
+      "disc": true
+    },
+    "xbox": {
+      "name": "Xbox",
+      "extensions": [
+        "xiso",
+        "iso"
+      ],
+      "folders": [
+        "xbox",
+        "xbox1",
+        "ogxbox",
+        "originalxbox"
+      ],
+      "disc": true,
+      "external": [
+        {
+          "name": "hakuX",
+          "package": "com.rfandango.haku_x",
+          "activity": "com.rfandango.haku_x.LauncherActivity",
+          "action": "android.intent.action.VIEW"
+        }
+      ]
+    }
+  }
+}

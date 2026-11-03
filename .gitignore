@@ -1,0 +1,59 @@
+# ROMs - never commit
+roms/
+*.gba
+*.gb
+*.gbc
+*.sfc
+*.smc
+*.nes
+*.gen
+*.smd
+*.bin
+*.cue
+*.chd
+*.iso
+*.pbp
+*.zip
+*.7z
+player-template/app/src/main/assets/game/rom.*
+
+# Downloaded libretro cores (fetched by cores/fetch_cores.sh)
+player-template/app/src/main/jniLibs/**/*.so
+player-template/app/src/main/assets/coredata/
+cores/*.so
+cores/public/
+
+# Build outputs
+player-template/app/libs/
+.cxx/
+output/
+build/
+.gradle/
+.kotlin/
+local.properties
+*.apk
+*.aab
+
+# Signing keys
+*.keystore
+*.jks
+
+# Python
+__pycache__/
+.venv/
+
+# IDE / OS
+.idea/
+*.iml
+.DS_Store
+
+# Generated into the converter app at build time by `./raineywrapper converter`
+converter/app/src/main/assets/
+
+# IDE-compiled classes
+bin/
+
+# Personal cover art and editor files
+*.jpg
+*.jpeg
+*.code-workspace
