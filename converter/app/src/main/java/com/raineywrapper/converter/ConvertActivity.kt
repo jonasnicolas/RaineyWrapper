@@ -268,6 +268,7 @@ class ConvertActivity : GamepadActivity() {
                 "BIOS: ${bios.values.first().name}"
             }
         }
+        source.system.note?.let { lines += "Note: ${it.replaceFirstChar { c -> c.uppercase() }}." }
         if (source.system.isExternal) {
             if (installedEmulators.isEmpty()) {
                 val names = source.system.external.map { it.name }.distinct().joinToString(" or ")

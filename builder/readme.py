@@ -42,8 +42,11 @@ def _core_name(core_names: dict[str, str], system: dict) -> str:
     return core_names[core]
 
 
-def _system_name(system: dict) -> str:
-    return system["name"] + (" (needs your own BIOS)" if system.get("biosRequired") else "")
+def _system_name(system: dict, with_note: bool = True) -> str:
+    notes = ["needs your own BIOS"] if system.get("biosRequired") else []
+    if with_note and system.get("note"):
+        notes.append(system["note"])
+    return system["name"] + "".join(f" ({n})" for n in notes)
 
 
 def _external_names(system: dict, markdown: bool) -> str:
@@ -79,15 +82,23 @@ def text_list() -> str:
 
     for s in built_in:
         _core_name(core_names, s)  # same check as the Markdown table
-    entries = [(_system_name(s), s) for s in built_in]
-    entries += [(f"{_system_name(s)}: opens in {_external_names(s, False)}", s) for s in external]
+    # Notes go on their own line here so a long one doesn't widen the whole list.
+    entries = [(_system_name(s, with_note=False), s) for s in built_in]
+    entries += [(f"{_system_name(s, with_note=False)}: opens in {_external_names(s, False)}", s) for s in external]
     width = max(len(left) for left, _ in entries)
 
-    lines = ["Built in (nothing else to install):"]
-    lines += [line(left, _extensions(s), width) for left, s in entries[:len(built_in)]]
+    def block(chunk: list[tuple[str, dict]]) -> list[str]:
+        out = []
+        for left, s in chunk:
+            out.append(line(left, _extensions(s), width))
+            if s.get("note"):
+                out.append(f"      {s['note'][:1].upper()}{s['note'][1:]}.")
+        return out
+
+    lines = ["Built in (nothing else to install):"] + block(entries[:len(built_in)])
     if external:
         lines += ["", "Needs an emulator app installed (the game's icon opens it straight into the game):"]
-        lines += [line(left, _extensions(s), width) for left, s in entries[len(built_in):]]
+        lines += block(entries[len(built_in):])
     return "\n".join(lines)
 
 

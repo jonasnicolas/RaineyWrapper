@@ -31,6 +31,7 @@ app, or on a computer with the command-line builder.
 | GameCube | Dolphin | `.iso .rvz .gcm .gcz .ciso` |
 | Wii | Dolphin | `.wbfs .iso .rvz .wia .gcz .ciso` |
 | Xbox | opens in [hakuX](https://heldgames.com/guides/hakux-xbox-android-handhelds), installed separately | `.xiso.iso .iso` |
+| PlayStation 3 (install the PS3 firmware in aPS3e first) | opens in [aPS3e](https://play.google.com/store/apps/details?id=aenu.aps3e), installed separately | `.iso` |
 <!-- systems-table:end -->
 
 Cartridge games can also be inside `.zip` files.
@@ -74,8 +75,11 @@ and 120 Hz.
 ### Tips
 
 - Put games in folders named after their system (`psx`, `ps2`, `dreamcast`, `gamecube`, …) so
-  shared formats like `.chd` and `.iso` are detected correctly. (GameCube and Wii discs are told
-  apart automatically.) You can also pick the system by hand.
+  shared formats like `.chd` and `.iso` are detected correctly. (GameCube, Wii and PS3 discs are
+  recognised automatically.) You can also pick the system by hand.
+- PS3 games open in [aPS3e](https://play.google.com/store/apps/details?id=aenu.aps3e) (Android 10+,
+  arm64, Vulkan), which you install separately. Install the PS3 firmware in aPS3e before playing.
+  Only `.iso` disc images are supported so far; PS3 games stored as a folder (`PS3_GAME`) aren't.
 - PS2 needs a BIOS dumped from your own console: put the 4 MB `.bin` in a `bios` folder (for
   example `ps2/bios`) and RaineyWrapper bundles the one matching the game's region.
 - A Dreamcast BIOS in `bios/dc/` is used automatically when present (optional).

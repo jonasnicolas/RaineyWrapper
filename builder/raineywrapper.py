@@ -66,6 +66,16 @@ def load_systems() -> dict[str, list[dict]]:
 SYSTEM_OVERRIDE: str | None = None
 
 
+def is_ps3_disc(path: Path) -> bool:
+    """PS3 disc images are ISO 9660 with the volume name "PS3VOLUME" (primary volume descriptor, sector 16)."""
+    try:
+        with path.open("rb") as f:
+            f.seek(0x8028)
+            return f.read(9) == b"PS3VOLUME"
+    except OSError:
+        return False
+
+
 def nintendo_disc(path: Path) -> str | None:
     """'wii' or 'gamecube' from the disc header (both use .iso, .rvz, .gcz...), or None."""
     def u32(data: bytes, offset: int, order: str = "big") -> int:
@@ -108,6 +118,8 @@ def pick_system(systems: dict, ext: str, path: Path) -> dict:
     if len(candidates) > 1 and any(c["system"] in ("gamecube", "wii") for c in candidates):
         kind = nintendo_disc(path)
         candidates = [c for c in candidates if c["system"] == kind] or candidates
+    if len(candidates) > 1 and any(c["system"] == "ps3" for c in candidates) and is_ps3_disc(path):
+        candidates = [c for c in candidates if c["system"] == "ps3"]
     folders = [path.parent.name.lower(), path.parent.parent.name.lower()]
     system = next((c for c in candidates if any(f in c["folders"] for f in folders)), candidates[0])
     if system["external"]:
