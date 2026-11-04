@@ -105,6 +105,12 @@ The supported-systems tables in `README.md` and `README-public.txt` are generate
 `builder/systems.json`, then run `./raineywrapper readme` (`package` does this too, and
 `./raineywrapper readme --check` exits 1 when they're out of date).
 
+No Mac or Linux machine? The **Build APK** workflow builds the app on GitHub: open the repository's
+Actions tab, pick **Build APK**, then **Run workflow**, and download the APK from the run's
+Artifacts. Leave "side by side" on unless you've added your signing key as repository secrets (see
+the top of `.github/workflows/build-apk.yml`): the build then installs as a separate "RaineyWrapper
+Test" app instead of replacing your current RaineyWrapper.
+
 The first build creates a signing key in `~/.raineywrapper/`. Keep it: updates only install
 over apps signed with the same key.
 
