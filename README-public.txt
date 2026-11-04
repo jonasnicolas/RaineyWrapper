@@ -22,6 +22,7 @@ Built in (nothing else to install):
   - PSP                                          (.iso .cso)
   - Dreamcast                                    (.chd .cdi .gdi)
   - GameCube                                     (.iso .rvz .gcm)
+  - Wii                                          (.wbfs .iso .rvz .wia)
   - PlayStation 2 (needs your own PS2 BIOS)      (.iso .chd .cso .cue)
 
 Needs an emulator app installed (the game's icon opens it straight into the game):
@@ -47,7 +48,7 @@ CONVERTING A GAME
 3. Choose where the game lives:
      - Put the game inside the app: works on its own; uses extra storage.
      - Play from where the file is now: small app, but keep the game file where it is.
-   Disc-based games (PS1, PSP, PS2, Dreamcast, GameCube) default to the second option.
+   Disc-based games (PS1, PSP, PS2, Dreamcast, GameCube, Wii) default to the second option.
 4. Press "Convert and install" and confirm Android's install prompt.
 
 The first time, Android asks you to allow RaineyWrapper to install apps.
@@ -60,9 +61,14 @@ PLAYING
 -------
 - Back, or Start+Select, opens the in-game menu: save state, load state, reset,
   screen filter (sharp, smooth, upscale, CRT, LCD), internal resolution for 3D systems,
-  touch controls on/off, and quit.
+  Wii controller type, FPS counter, touch controls on/off, and quit.
 - In-game saves are kept automatically.
-- On-screen touch controls appear automatically on devices without buttons.
+- On-screen touch controls appear automatically on devices without buttons. Systems with
+  analog sticks get on-screen sticks (two for N64, GameCube, Wii and PS2).
+- Wii games play with a Wii Remote + Nunchuk by default: the left stick is the Nunchuk stick
+  and the right stick moves the pointer. Classic Controller and sideways Wii Remote can be
+  picked in the menu.
+- Games always run at their own speed, even on 90/120 Hz screens.
 - Converting a game that's already installed updates it and keeps its saves.
 
 Folder names help tell systems apart: put games in folders named psx, psp, ps2,
@@ -76,7 +82,7 @@ PS2 games need a BIOS dumped from your own PS2 (a 4 MB .bin file, e.g. scph39001
 Put it in a "bios" folder, for example next to your games in ps2/bios, and RaineyWrapper
 includes it automatically, picking the one that matches the game's region.
 
-PS2 and GameCube need a fast device; on mid-range chips many games run at full speed,
+PS2, GameCube and Wii need a fast device; on mid-range chips many games run at full speed,
 but the most demanding ones may slow down. Dreamcast games run without a BIOS; if a dc_boot.bin is
 found in a "bios/dc" folder it's included automatically for better compatibility.
 

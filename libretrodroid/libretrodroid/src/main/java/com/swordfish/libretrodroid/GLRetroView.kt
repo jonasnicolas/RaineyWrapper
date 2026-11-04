@@ -192,6 +192,9 @@ class GLRetroView(
         }
     }
 
+    /** RaineyWrapper: frames emulated per second over the last second (safe from any thread). */
+    fun getFps(): Float = LibretroDroid.getFps()
+
     fun reset(useEmulationThread: Boolean = true) = runOnEmulationThread(useEmulationThread) {
         LibretroDroid.reset()
     }

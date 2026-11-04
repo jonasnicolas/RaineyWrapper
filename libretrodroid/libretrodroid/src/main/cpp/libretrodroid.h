@@ -27,6 +27,7 @@
 #include <vector>
 #include <unordered_set>
 #include <mutex>
+#include <atomic>
 #include <memory>
 #include <optional>
 
@@ -98,6 +99,8 @@ public:
     void destroy();
 
     void reset();
+    // RaineyWrapper: frames emulated per second over the last second, for the fps counter.
+    float getFps() const { return currentFps.load(); }
 
     void loadGameFromPath(const std::string &gamePath);
     void loadGameFromBytes(const int8_t *data, size_t size);
@@ -163,6 +166,9 @@ private:
     unsigned stepsSinceReport = 0;
     unsigned videoFramesSinceReport = 0;
     std::chrono::steady_clock::time_point lastReport = std::chrono::steady_clock::now();
+    unsigned stepsSinceFps = 0;
+    std::chrono::steady_clock::time_point lastFps = std::chrono::steady_clock::now();
+    std::atomic<float> currentFps { 0.0f };
 
     unsigned int frameSpeed = 1;
     bool audioEnabled = true;

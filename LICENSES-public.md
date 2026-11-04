@@ -20,7 +20,7 @@ source code is in `RaineyWrapper-source.zip` alongside this file.
 | SMS Plus GX libretro core | Master System / Game Gear | GPL-2.0-or-later | https://github.com/libretro/smsplus-gx |
 | PCSX ReARMed libretro core | PlayStation | GPL-2.0-or-later | https://github.com/libretro/pcsx_rearmed |
 | Flycast libretro core | Dreamcast | GPL-2.0-or-later | https://github.com/flyinghead/flycast |
-| Dolphin libretro core + system files | GameCube | GPL-2.0-or-later | https://github.com/libretro/dolphin |
+| Dolphin libretro core + system files | GameCube, Wii | GPL-2.0-or-later | https://github.com/libretro/dolphin |
 | PCSX2 libretro core (parallel-ps2) | PlayStation 2 | GPL-3.0 | https://github.com/libretro/parallel-ps2 |
 | Mupen64Plus-Next libretro core (GLES3) | Nintendo 64 | GPL-2.0 | https://github.com/libretro/mupen64plus-libretro-nx |
 | PPSSPP libretro core + system files | PSP | GPL-2.0-or-later | https://github.com/hrydgard/ppsspp |

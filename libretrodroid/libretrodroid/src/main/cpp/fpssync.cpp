@@ -15,6 +15,7 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <algorithm>
 #include <cmath>
 #include "fpssync.h"
 #include "log.h"
@@ -40,6 +41,7 @@ FPSSync::FPSSync(double contentRefreshRate, double screenRefreshRate) {
     this->screenRefreshRate = screenRefreshRate;
     this->useVSync = std::abs(contentRefreshRate - screenRefreshRate) < FPS_TOLERANCE;
     this->sampleInterval = std::chrono::microseconds((long) ((1000000L / contentRefreshRate)));
+    this->limitInterval = std::chrono::microseconds((long) (1000000L / std::max(contentRefreshRate, screenRefreshRate)));
     reset();
 }
 
@@ -50,6 +52,7 @@ void FPSSync::start() {
 
 void FPSSync::reset() {
     lastFrame = MIN_TIME;
+    limitTarget = MIN_TIME;
 }
 
 double FPSSync::getTimeStretchFactor() {
@@ -57,7 +60,20 @@ double FPSSync::getTimeStretchFactor() {
 }
 
 void FPSSync::wait() {
-    if (useVSync) return;
+    if (useVSync) {
+        // RaineyWrapper: vsync only sets the right speed if the screen keeps refreshing at the rate
+        // it reported when the game started. Phones and handhelds switch between 60, 90 and 120 Hz,
+        // and some cores' frames don't block on vsync at all, which made games run too fast. So also
+        // never start a frame sooner than one game frame after the last (or one screen refresh,
+        // whichever is shorter). When vsync paces correctly, this never waits.
+        auto now = std::chrono::steady_clock::now();
+        if (limitTarget != MIN_TIME && now < limitTarget) {
+            std::this_thread::sleep_until(limitTarget);
+            now = limitTarget;
+        }
+        limitTarget = now + limitInterval;
+        return;
+    }
     std::this_thread::sleep_until(lastFrame);
 }
 

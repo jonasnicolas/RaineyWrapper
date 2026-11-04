@@ -13,7 +13,7 @@ Each APK contains LibretroDroid plus only the one core its game needs.
 | Genesis Plus GX libretro core (Genesis / Master System / Game Gear) | buildbot nightly | **Non-commercial** custom license | https://github.com/libretro/Genesis-Plus-GX |
 | PPSSPP libretro core + PPSSPP system files (PSP games) | buildbot nightly | GPL-2.0-or-later | https://github.com/hrydgard/ppsspp |
 | Flycast libretro core (Dreamcast games) | buildbot nightly | GPL-2.0-or-later | https://github.com/flyinghead/flycast |
-| Dolphin libretro core + Dolphin system files (GameCube games) | buildbot nightly | GPL-2.0-or-later | https://github.com/libretro/dolphin |
+| Dolphin libretro core + Dolphin system files (GameCube and Wii games) | buildbot nightly | GPL-2.0-or-later | https://github.com/libretro/dolphin |
 | PCSX2 libretro core, parallel-ps2 (PS2 games) | buildbot nightly | GPL-3.0 | https://github.com/libretro/parallel-ps2 |
 | Mupen64Plus-Next libretro core, GLES3 build (N64 games) | buildbot nightly | GPL-2.0 | https://github.com/libretro/mupen64plus-libretro-nx |
 | AndroidX (activity, core, lifecycle) | see `player-template/app/build.gradle.kts` | Apache-2.0 | https://developer.android.com/jetpack/androidx |

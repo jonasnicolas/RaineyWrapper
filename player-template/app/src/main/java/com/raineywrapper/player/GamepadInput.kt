@@ -11,10 +11,14 @@ import kotlin.math.abs
  * handhelds report their built-in controls as a gamepad whose controller number
  * isn't always 1, and these are single-player wrappers.
  */
-class GamepadInput(private val retroView: GLRetroView, private val system: String) {
+class GamepadInput(
+    private val retroView: GLRetroView,
+    private val system: String,
+    private val wiiController: WiiController = WiiController.NUNCHUK,
+) {
 
     /** Systems with an analog stick of their own; elsewhere the left stick also drives the d-pad. */
-    private val hasAnalog = system in setOf("n64", "psp", "dreamcast", "gamecube")
+    private val hasAnalog = system in setOf("n64", "psp", "dreamcast", "gamecube", "wii")
 
     companion object {
         private const val STICK_DEADZONE = 0.5f
@@ -70,7 +74,34 @@ class GamepadInput(private val retroView: GLRetroView, private val system: Strin
             KeyEvent.KEYCODE_BUTTON_R2 -> KeyEvent.KEYCODE_BUTTON_R1
             else -> key
         }
+        "wii" -> wiiRemap(key)
         else -> key
+    }
+
+    /**
+     * Dolphin's Wii layouts (RetroPad -> Wii):
+     *  Nunchuk:  A/B = A/B, X/Y = C/Z, L1/R1 = -/+, Start/Select = 1/2, L2/R2 = shake Nunchuk/Remote, R3 = Home.
+     *            Here Start/Select become +/-, the shoulders become Z and B (the triggers), L3 is 1.
+     *  Classic:  L2/R2 = L/R, L1/R1 = ZL/ZR. Swapped so the main shoulders are L/R.
+     *  Sideways: B/A = 1/2, X/Y = A/B, Start/Select = +/-, R2 = shake. Used as-is.
+     */
+    private fun wiiRemap(key: Int): Int = when (wiiController) {
+        WiiController.NUNCHUK -> when (key) {
+            KeyEvent.KEYCODE_BUTTON_START -> KeyEvent.KEYCODE_BUTTON_R1
+            KeyEvent.KEYCODE_BUTTON_SELECT -> KeyEvent.KEYCODE_BUTTON_L1
+            KeyEvent.KEYCODE_BUTTON_L1 -> KeyEvent.KEYCODE_BUTTON_Y
+            KeyEvent.KEYCODE_BUTTON_R1 -> KeyEvent.KEYCODE_BUTTON_B
+            KeyEvent.KEYCODE_BUTTON_THUMBL -> KeyEvent.KEYCODE_BUTTON_START
+            else -> key
+        }
+        WiiController.CLASSIC -> when (key) {
+            KeyEvent.KEYCODE_BUTTON_L1 -> KeyEvent.KEYCODE_BUTTON_L2
+            KeyEvent.KEYCODE_BUTTON_R1 -> KeyEvent.KEYCODE_BUTTON_R2
+            KeyEvent.KEYCODE_BUTTON_L2 -> KeyEvent.KEYCODE_BUTTON_L1
+            KeyEvent.KEYCODE_BUTTON_R2 -> KeyEvent.KEYCODE_BUTTON_R1
+            else -> key
+        }
+        WiiController.SIDEWAYS -> key
     }
 
     fun onMotionEvent(event: MotionEvent): Boolean {

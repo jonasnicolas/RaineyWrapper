@@ -87,15 +87,56 @@ object Systems {
     /**
      * The system for a ROM. When several systems share the extension, the ROM's folder
      * (or its parent's) decides, e.g. "dreamcast/Game.chd"; otherwise the first listed wins.
+     * Nintendo discs say in their header whether they're GameCube or Wii, which beats the folder.
      */
     fun forFile(context: Context, ext: String, file: File): GameSystem? {
-        val candidates = all(context).filter { ext.lowercase() in it.extensions }
+        var candidates = all(context).filter { ext.lowercase() in it.extensions }
         if (candidates.size <= 1) return candidates.firstOrNull()
+        if (candidates.any { it.id == "gamecube" || it.id == "wii" }) {
+            val kind = nintendoDisc(file)
+            candidates = candidates.filter { it.id == kind }.ifEmpty { candidates }
+        }
         val folders = generateSequence(file.parentFile) { it.parentFile }.take(2).map { it.name.lowercase() }.toList()
         return candidates.firstOrNull { sys -> folders.any { it in sys.folders } } ?: candidates.first()
     }
 
     fun supportedExtensions(context: Context) = all(context).flatMap { it.extensions }.toSet() + "zip"
+
+    /** "wii" or "gamecube" from the disc header (both use .iso, .rvz, .gcz...), or null. */
+    private fun nintendoDisc(file: File): String? = try {
+        java.io.RandomAccessFile(file, "r").use { f ->
+            fun read(offset: Long, size: Int): ByteArray? {
+                if (f.length() < offset + size) return null
+                f.seek(offset)
+                return ByteArray(size).also { f.readFully(it) }
+            }
+            fun ByteArray.u32(at: Int, little: Boolean = false): Long {
+                val b = (0 until 4).map { this[at + it].toLong() and 0xFF }
+                val ordered = if (little) b.reversed() else b
+                return ordered.fold(0L) { acc, v -> (acc shl 8) or v }
+            }
+            fun fromHeader(h: ByteArray?): String? = when {
+                h == null -> null
+                h.u32(0x18) == 0x5D1C9EA3L -> "wii"
+                h.u32(0x1C) == 0xC2339F3DL -> "gamecube"
+                else -> null
+            }
+            val start = read(0, 0x60) ?: return null
+            val magic = String(start, 0, 4, Charsets.ISO_8859_1)
+            when {
+                magic == "WBFS" -> "wii"
+                // WIA/RVZ: header 2 starts at 0x48 with the disc type.
+                magic == "WIA\u0001" || magic == "RVZ\u0001" -> when (start.u32(0x48)) { 1L -> "gamecube"; 2L -> "wii"; else -> null }
+                // GCZ: sub-type 0 = GameCube, 1 = Wii.
+                start.u32(0, little = true) == 0xB10BC001L -> when (start.u32(4, little = true)) { 0L -> "gamecube"; 1L -> "wii"; else -> null }
+                // CISO: the disc starts after the 32 KB block map.
+                magic == "CISO" -> fromHeader(read(0x8000, 0x20))
+                else -> fromHeader(start)
+            }
+        }
+    } catch (_: java.io.IOException) {
+        null
+    }
 }
 
 /** Track files that only make sense together with a .cue sheet. */
@@ -252,7 +293,8 @@ fun gameAssets(source: GameSource, title: String, embed: Boolean, emulators: Lis
                 var text = source.file.readText()
                 source.tracks.forEachIndexed { i, (ref, track) ->
                     val name = "rom" + (if (i == 0) "" else "_%02d".format(i + 1)) + "." + track.ext
-                    text = text.replace("\"$ref\"", name).replace(ref, name)
+                    // Keep the name quoted: some cores' cue parsers (PCSX2) reject unquoted names.
+                    text = if (text.contains("\"$ref\"")) text.replace("\"$ref\"", "\"$name\"") else text.replace(ref, "\"$name\"")
                     assets += ApkPatcher.Asset(name, track.length(), true) { track.inputStream() }
                 }
                 val sheetName = "rom." + source.file.ext

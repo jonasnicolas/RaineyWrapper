@@ -482,7 +482,13 @@ void LibretroDroid::step() {
 
     // RaineyWrapper: log the real frame rate every 5 seconds, for performance tuning.
     stepsSinceReport++;
+    stepsSinceFps++;
     auto now = std::chrono::steady_clock::now();
+    if (now - lastFps >= std::chrono::seconds(1)) {
+        currentFps = stepsSinceFps / std::chrono::duration<float>(now - lastFps).count();
+        stepsSinceFps = 0;
+        lastFps = now;
+    }
     if (now - lastReport >= std::chrono::seconds(5)) {
         auto seconds = std::chrono::duration<float>(now - lastReport).count();
         LOGI("RaineyWrapper fps: %.1f (video frames %.1f)", stepsSinceReport / seconds, videoFramesSinceReport / seconds);

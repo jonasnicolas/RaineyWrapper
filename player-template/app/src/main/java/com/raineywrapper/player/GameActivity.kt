@@ -51,6 +51,8 @@ class GameActivity : ComponentActivity() {
         private const val PREF_TOUCH = "touch_controls"
         private const val PREF_FILTER = "screen_filter"
         private const val PREF_RESOLUTION = "resolution_level"
+        private const val PREF_WII_CONTROLLER = "wii_controller"
+        private const val PREF_FPS = "fps_counter"
     }
 
     private lateinit var container: FrameLayout
@@ -61,6 +63,7 @@ class GameActivity : ComponentActivity() {
     private var gamepad: GamepadInput? = null
     private var overlay: TouchOverlay? = null
     private var message: View? = null
+    private var fpsLabel: TextView? = null
     private var starting = false
 
     /** True once the core has loaded the game; SRAM and states can't be touched before that. */
@@ -69,12 +72,16 @@ class GameActivity : ComponentActivity() {
     /** Resolution level the core was started with; a different saved level needs a restart. */
     private var startedResolution = 0
 
+    /** Wii controller the core was started with; like resolution, a change needs a restart. */
+    private var startedWiiController = WiiController.NUNCHUK
+
     /** Physical Start/Select currently held, for the Start+Select menu shortcut. */
     private val heldCombo = mutableSetOf<Int>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        preferSixtyHz()
         container = FrameLayout(this).apply { setBackgroundColor(Color.BLACK) }
         setContentView(container)
         enterImmersiveMode()
@@ -147,13 +154,14 @@ class GameActivity : ComponentActivity() {
             preferLowLatencyAudio = true
             rumbleEventsEnabled = false
             startedResolution = resolutionLevel()
+            startedWiiController = wiiController()
             variables = coreVariables(config.system) +
                 listOfNotNull(InternalResolution.levels(config.system).getOrNull(startedResolution)?.variable)
         }
 
         val view = GLRetroView(this, data)
         retroView = view
-        gamepad = GamepadInput(view, config.system)
+        gamepad = GamepadInput(view, config.system, startedWiiController)
         lifecycle.addObserver(view)
         // Registered after the view's own observers, so on resume this runs after
         // LibretroDroid restarts emulation and can re-pause it if the menu is open.
@@ -165,13 +173,29 @@ class GameActivity : ComponentActivity() {
             FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT, Gravity.CENTER),
         )
 
-        overlay = TouchOverlay(this, TouchOverlay.layoutFor(config.system),
+        overlay = TouchOverlay(this, TouchOverlay.layoutFor(config.system, startedWiiController),
             onKey = { action, key -> view.sendKeyEvent(action, key, 0) },
-            onAnalog = { x, y -> view.sendMotionEvent(GLRetroView.MOTION_SOURCE_ANALOG_LEFT, x, y, 0) },
+            onAnalog = { right, x, y ->
+                val source = if (right) GLRetroView.MOTION_SOURCE_ANALOG_RIGHT else GLRetroView.MOTION_SOURCE_ANALOG_LEFT
+                view.sendMotionEvent(source, x, y, 0)
+            },
             onMenu = { openMenu() },
         ).also {
             it.visibility = if (touchControlsEnabled()) View.VISIBLE else View.GONE
             container.addView(it, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT))
+        }
+        // FPS counter: top middle, just below the touch controls' menu button (which ends at 0.9 of
+        // TouchOverlay's size unit, a tenth of the short side).
+        fpsLabel = TextView(this).apply {
+            setTextColor(Color.WHITE)
+            setShadowLayer(4f, 0f, 0f, Color.BLACK)
+            textSize = 14f
+            visibility = if (fpsCounterEnabled()) View.VISIBLE else View.GONE
+        }.also {
+            val top = minOf(resources.displayMetrics.widthPixels, resources.displayMetrics.heightPixels) * 13 / 100
+            container.addView(it, FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT, Gravity.TOP or Gravity.CENTER_HORIZONTAL,
+            ).apply { topMargin = top })
         }
         container.addView(menu, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT))
 
@@ -185,6 +209,17 @@ class GameActivity : ComponentActivity() {
                 Log.e(TAG, "Emulator error $code")
                 Toast.makeText(this@GameActivity, "Emulator error ($code)", Toast.LENGTH_LONG).show()
                 finish()
+            }
+        }
+
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                while (true) {
+                    fpsLabel?.takeIf { it.visibility == View.VISIBLE && gameRunning }?.let {
+                        it.text = String.format(java.util.Locale.US, "%.1f FPS", view.getFps())
+                    }
+                    delay(1_000)
+                }
             }
         }
 
@@ -203,12 +238,12 @@ class GameActivity : ComponentActivity() {
 
     /** Core options that differ from the core's defaults. */
     private fun coreVariables(system: String): Array<Variable> = when (system) {
-        "gamecube" -> arrayOf(
-            // Compile shaders in the background and skip drawing until they're ready, instead of
-            // freezing the game each time a new effect appears (Dolphin's main source of stutter).
-            Variable("dolphin_shader_compilation_mode", "3"),
-            // Dolphin logs every disc read at its default level; errors only.
-            Variable("dolphin_log_level", "2"),
+        "gamecube" -> dolphinVariables()
+        "wii" -> dolphinVariables() + arrayOf(
+            Variable("dolphin_wiimote_default_device", startedWiiController.device),
+            // The right stick moves the Wii pointer and it stays put when released (the default snaps
+            // back to the centre), so you can aim, let go and press A with the same thumb.
+            Variable("dolphin_ir_mode", "0"),
         )
         "ps2" -> arrayOf(
             // Vulkan: far lower per-draw CPU cost than GL ES on mobile GPUs (GL ES was driver-bound).
@@ -224,6 +259,16 @@ class GameActivity : ComponentActivity() {
         )
         else -> emptyArray()
     }
+
+    private fun dolphinVariables() = arrayOf(
+        // Compile shaders in the background and skip drawing until they're ready, instead of
+        // freezing the game each time a new effect appears (Dolphin's main source of stutter).
+        Variable("dolphin_shader_compilation_mode", "3"),
+        // Dolphin logs every disc read at its default level; errors only.
+        Variable("dolphin_log_level", "2"),
+        // No "Video Info" banner and other emulator messages over the game.
+        Variable("dolphin_osd_enabled", "disabled"),
+    )
 
     override fun onPause() {
         // The emulation thread is already paused at this point (lifecycle observers
@@ -308,7 +353,7 @@ class GameActivity : ComponentActivity() {
 
     // --- menu ---------------------------------------------------------------
 
-    private fun menuItems() = listOf(
+    private fun menuItems() = listOfNotNull(
         GameMenu.Item({ "Resume" }) { closeMenu() },
         GameMenu.Item({ "Save state" }, { gameRunning }) { saveState() },
         GameMenu.Item({ "Load state" }, { gameRunning && saves.hasState() }) { loadState() },
@@ -330,10 +375,27 @@ class GameActivity : ComponentActivity() {
             prefs().edit().putInt(PREF_RESOLUTION, (resolutionLevel() + 1) % count).apply()
             menu.refresh()
         },
+        GameMenu.Item({ "Wii controller: " + wiiController().label }) {
+            val next = WiiController.entries[(wiiController().ordinal + 1) % WiiController.entries.size]
+            prefs().edit().putString(PREF_WII_CONTROLLER, next.name).apply()
+            menu.refresh()
+        }.takeIf { config.system == "wii" },
         GameMenu.Item(
-            { if (resolutionLevel() != startedResolution) "Restart game to apply resolution" else "Restart game" },
+            {
+                when {
+                    resolutionLevel() != startedResolution -> "Restart game to apply resolution"
+                    wiiController() != startedWiiController -> "Restart game to apply controller"
+                    else -> "Restart game"
+                }
+            },
             { gameRunning },
         ) { restartGame() },
+        GameMenu.Item({ "FPS counter: " + if (fpsCounterEnabled()) "On" else "Off" }) {
+            val enabled = !fpsCounterEnabled()
+            prefs().edit().putBoolean(PREF_FPS, enabled).apply()
+            fpsLabel?.visibility = if (enabled) View.VISIBLE else View.GONE
+            menu.refresh()
+        },
         GameMenu.Item({ "Touch controls: " + if (touchControlsEnabled()) "On" else "Off" }) {
             setTouchControls(!touchControlsEnabled())
             menu.refresh()
@@ -345,8 +407,14 @@ class GameActivity : ComponentActivity() {
 
     private fun prefs() = getSharedPreferences(PREFS, MODE_PRIVATE)
 
+    private fun fpsCounterEnabled() = prefs().getBoolean(PREF_FPS, false)
+
     private fun screenFilter(): ScreenFilter =
         prefs().getString(PREF_FILTER, null)?.let { name -> ScreenFilter.entries.firstOrNull { it.name == name } } ?: ScreenFilter.SHARP
+
+    private fun wiiController(): WiiController =
+        prefs().getString(PREF_WII_CONTROLLER, null)?.let { name -> WiiController.entries.firstOrNull { it.name == name } }
+            ?: WiiController.NUNCHUK
 
     private fun resolutionLevel(): Int {
         val count = InternalResolution.levels(config.system).size
@@ -416,6 +484,21 @@ class GameActivity : ComponentActivity() {
         val ok = data != null && runCatching { view.unserializeState(data, false) }.getOrDefault(false)
         toast(if (ok) "State loaded" else "Couldn't load state")
         closeMenu()
+    }
+
+    /**
+     * Many screens switch between 60, 90 and 120 Hz. Games are made for 60 (or 50), and the emulator
+     * paces frames by the refresh rate it sees at startup, so ask for the 60 Hz mode while playing:
+     * steady pacing, no speed-up when the screen changes mode, and less battery.
+     */
+    @Suppress("DEPRECATION")
+    private fun preferSixtyHz() {
+        val display = windowManager.defaultDisplay
+        val current = display.mode
+        val mode = display.supportedModes
+            .filter { it.physicalWidth == current.physicalWidth && it.physicalHeight == current.physicalHeight }
+            .minByOrNull { kotlin.math.abs(it.refreshRate - 60f) } ?: return
+        window.attributes = window.attributes.apply { preferredDisplayModeId = mode.modeId }
     }
 
     // --- touch controls -----------------------------------------------------

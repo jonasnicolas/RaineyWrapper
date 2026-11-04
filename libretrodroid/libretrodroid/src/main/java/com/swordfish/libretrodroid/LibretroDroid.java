@@ -98,6 +98,8 @@ public class LibretroDroid {
     public static native void loadGameFromBytes(byte[] gameFileBytes);
     public static native void loadGameFromVirtualFiles(List<DetachedVirtualFile> virtualFiles);
     public static native void resume();
+    // RaineyWrapper: frames emulated per second over the last second.
+    public static native float getFps();
 
     public static native void onSurfaceCreated();
     public static native void onSurfaceChanged(int width, int height);

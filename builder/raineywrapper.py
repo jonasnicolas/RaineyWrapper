@@ -61,9 +61,52 @@ def load_systems() -> dict[str, list[dict]]:
     return by_ext
 
 
+# Set by --system: overrides folder-based detection (like the System picker in the app).
+SYSTEM_OVERRIDE: str | None = None
+
+
+def nintendo_disc(path: Path) -> str | None:
+    """'wii' or 'gamecube' from the disc header (both use .iso, .rvz, .gcz...), or None."""
+    def u32(data: bytes, offset: int, order: str = "big") -> int:
+        return int.from_bytes(data[offset:offset + 4], order)
+
+    def from_header(header: bytes) -> str | None:
+        if u32(header, 0x18) == 0x5D1C9EA3:
+            return "wii"
+        if u32(header, 0x1C) == 0xC2339F3D:
+            return "gamecube"
+        return None
+
+    try:
+        with open(path, "rb") as f:
+            start = f.read(0x60)
+            if start[:4] == b"WBFS":
+                return "wii"
+            if start[:4] in (b"WIA\x01", b"RVZ\x01"):  # header 2 starts at 0x48 with the disc type
+                return {1: "gamecube", 2: "wii"}.get(u32(start, 0x48))
+            if u32(start, 0, "little") == 0xB10BC001:  # GCZ: sub-type 0 = GameCube, 1 = Wii
+                return {0: "gamecube", 1: "wii"}.get(u32(start, 4, "little"))
+            if start[:4] == b"CISO":  # the disc starts after the 32 KB block map
+                f.seek(0x8000)
+                return from_header(f.read(0x20))
+            return from_header(start)
+    except OSError:
+        return None
+
+
 def pick_system(systems: dict, ext: str, path: Path) -> dict:
-    """When an extension is shared (.chd: PS1, PS2, Dreamcast), the ROM's folder decides."""
+    """When an extension is shared (.chd: PS1, PS2, Dreamcast), the ROM's folder decides.
+    Nintendo discs say in their header whether they're GameCube or Wii, which beats the folder."""
     candidates = systems[ext]
+    if SYSTEM_OVERRIDE:
+        forced = next((c for c in candidates if c["system"] == SYSTEM_OVERRIDE), None)
+        if forced is None:
+            names = ", ".join(c["system"] for c in candidates)
+            raise BuildError(f"{path.name}: .{ext} files can't be {SYSTEM_OVERRIDE} (possible systems: {names})")
+        candidates = [forced]
+    if len(candidates) > 1 and any(c["system"] in ("gamecube", "wii") for c in candidates):
+        kind = nintendo_disc(path)
+        candidates = [c for c in candidates if c["system"] == kind] or candidates
     folders = [path.parent.name.lower(), path.parent.parent.name.lower()]
     system = next((c for c in candidates if any(f in c["folders"] for f in folders)), candidates[0])
     if system["external"]:
@@ -147,7 +190,8 @@ def resolve_sheet(sheet: Path, pattern: re.Pattern) -> RomSet:
         renames[ref] = new
         rom.files[new] = src
 
-    rom.files[main] = pattern.sub(lambda m: f"{m.group(1)}{renames[m.group(2)]}{m.group(3)}", text).encode()
+    # Keep the file name quoted: some cores' cue parsers (PCSX2) reject unquoted names.
+    rom.files[main] = pattern.sub(lambda m: f'{m.group(1)}"{renames[m.group(2)]}"{m.group(3)}', text).encode()
     return rom
 
 
@@ -344,6 +388,55 @@ def install(tc: Toolchain, apk: Path, app_id: str) -> None:
     if r.returncode != 0 or "Success" not in out:
         raise BuildError(f"adb install failed:\n{out.strip()}")
     log("Installed.")
+
+
+MAC_OUTPUT = OUTPUT / "mac"
+CORE_DATA = TEMPLATE / "app" / "src" / "main" / "assets" / "coredata"
+
+
+def build_mac(rom_path: Path, title: str | None, icon: Path | None, package_suffix: str | None,
+              do_install: bool, bios: Path | None) -> Path:
+    """Standalone macOS app (see macos.py). Needs no Android toolchain."""
+    import macos
+
+    systems = load_systems()
+    with tempfile.TemporaryDirectory(prefix="raineywrapper-mac-") as tmp:
+        rom, system = resolve_rom(rom_path, systems, Path(tmp))
+        if not system.get("core"):
+            raise BuildError(f"{system['name']} isn't supported on macOS yet")
+        if system["bios_required"] and not bios:
+            raise BuildError(f"{system['name']} games need a BIOS: pass --bios path/to/your-bios.bin")
+        title = title or title_from_filename(rom.title_source)
+        app_id = f"{APP_ID_PREFIX}.{sanitize_package_part(package_suffix or title)}"
+        log(f"{title}  [{system['name']}, core: {system['core']}]  ->  macOS app {app_id}")
+        if system["system"] == "ps2":
+            log("Warning: PS2 on macOS is experimental. On an Intel Mac with Iris graphics the game "
+                "loads but never draws a frame; it is untested on Apple Silicon.")
+
+        # BIOS plus the core's support files (PPSSPP fonts, Dolphin's Sys folder), shared with Android.
+        system_files: dict = {}
+        if bios:
+            target = system["bios"][0].replace("*.bin", bios.name) if system["bios"] else bios.name
+            system_files[target] = bios
+        data = CORE_DATA / system["core"]
+        if data.is_dir():
+            for item in data.iterdir():
+                system_files[item.name] = item
+
+        MAC_OUTPUT.mkdir(parents=True, exist_ok=True)
+        out = macos.build_app(MAC_OUTPUT / f"{safe_filename(title)}.app", app_id, title, system,
+                              rom.main, rom.files, system_files, icon, time.strftime("%Y.%m.%d"))
+    size = sum(f.stat().st_size for f in out.rglob("*") if f.is_file() and not f.is_symlink())
+    log(f"Built {out.relative_to(ROOT)} ({size / 1e6:.0f} MB)")
+    if do_install:
+        apps = Path.home() / "Applications"
+        apps.mkdir(exist_ok=True)
+        dest = apps / out.name
+        shutil.rmtree(dest, ignore_errors=True)
+        shutil.copytree(out, dest, symlinks=True)
+        log(f"Installed to {dest}")
+        return dest
+    return out
 
 
 def build_one(tc: Toolchain, rom_path: Path, title: str | None, icon: Path | None,
@@ -554,6 +647,9 @@ def main() -> int:
     b.add_argument("--package-suffix", help=f"use {APP_ID_PREFIX}.<suffix> instead of a name derived from the title")
     b.add_argument("--install", action="store_true", help="install on the connected device with adb")
     b.add_argument("--bios", type=Path, help="BIOS file to bundle (required for PS2)")
+    b.add_argument("--system", help="force the system (e.g. ps2) when the ROM's folder doesn't say; see systems.json")
+    b.add_argument("--target", choices=["android", "mac"], default="android",
+                   help="android: APK (default); mac: standalone macOS app")
 
     sub.add_parser("doctor", help="check that the JDK, Android SDK and Pillow are installed")
     pk = sub.add_parser("package", help="build the public release and write the upload folder + zip")
@@ -567,7 +663,19 @@ def main() -> int:
                    help="distributable variant: swaps non-commercial cores for GPL-compatible ones; output/public/")
 
     args = parser.parse_args()
+    global SYSTEM_OVERRIDE
+    SYSTEM_OVERRIDE = getattr(args, "system", None)
     try:
+        if args.command == "build" and args.target == "mac":
+            # macOS apps need no JDK/Android SDK, only Pillow for the icon.
+            doctor.check_pillow()
+            if not args.rom.exists():
+                raise BuildError(f"ROM not found: {args.rom}")
+            for path, what in ((args.icon, "icon"), (args.bios, "BIOS")):
+                if path and not path.exists():
+                    raise BuildError(f"{what} not found: {path}")
+            build_mac(args.rom, args.title, args.icon, args.package_suffix, args.install, args.bios)
+            return 0
         tc = doctor.run_all()
         if args.command == "doctor":
             log(f"JDK:         {tc.java_home}")

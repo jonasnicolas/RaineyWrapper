@@ -282,6 +282,13 @@ JNIEXPORT jbyteArray JNICALL Java_com_swordfish_libretrodroid_LibretroDroid_seri
     return nullptr;
 }
 
+JNIEXPORT jfloat JNICALL Java_com_swordfish_libretrodroid_LibretroDroid_getFps(
+    JNIEnv* env,
+    jclass obj
+) {
+    return LibretroDroid::getInstance().getFps();
+}
+
 JNIEXPORT void JNICALL Java_com_swordfish_libretrodroid_LibretroDroid_reset(
     JNIEnv* env,
     jclass obj

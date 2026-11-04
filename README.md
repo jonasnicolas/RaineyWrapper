@@ -25,6 +25,7 @@ app, or on a computer with the command-line builder.
 | PSP | PPSSPP | `.iso .cso` |
 | Dreamcast | Flycast | `.chd .cdi .gdi` |
 | GameCube | Dolphin | `.iso .rvz .gcm` |
+| Wii | Dolphin | `.wbfs .iso .rvz .wia` |
 | PlayStation 2 (needs your own BIOS) | PCSX2 (parallel-ps2, Vulkan) | `.iso .chd .cso .cue` |
 | Xbox | opens in [hakuX](https://heldgames.com/guides/hakux-xbox-android-handhelds), installed separately | `.xiso.iso` |
 
@@ -51,12 +52,21 @@ scanning**. ("Scan app" uploads the whole game file to Google.)
 ### In-game menu
 
 Press **Back** or **Start + Select** for save/load state, reset, screen filters (sharp, smooth,
-upscale, CRT, LCD), internal resolution for 3D systems, touch controls and quit.
+upscale, CRT, LCD), internal resolution for 3D systems, the Wii controller type (Wii Remote +
+Nunchuk, Classic Controller or sideways Wii Remote), an FPS counter, touch controls and quit.
+
+Touch controls include analog sticks for systems that have them: the left stick for N64, PSP,
+Dreamcast, GameCube, Wii and PS2, and a right stick for the N64 C-buttons, GameCube C-stick,
+Wii pointer and PS2.
+
+Games always run at their own speed (60 or 50 fps), even on screens that switch between 60, 90
+and 120 Hz.
 
 ### Tips
 
 - Put games in folders named after their system (`psx`, `ps2`, `dreamcast`, `gamecube`, …) so
-  shared formats like `.chd` and `.iso` are detected correctly. You can also pick the system by hand.
+  shared formats like `.chd` and `.iso` are detected correctly. (GameCube and Wii discs are told
+  apart automatically.) You can also pick the system by hand.
 - PS2 needs a BIOS dumped from your own console: put the 4 MB `.bin` in a `bios` folder (for
   example `ps2/bios`) and RaineyWrapper bundles the one matching the game's region.
 - A Dreamcast BIOS in `bios/dc/` is used automatically when present (optional).
@@ -73,6 +83,9 @@ cores/fetch_cores.sh mgba pcsx_rearmed snes9x genesis_plus_gx mupen64plus_next_g
 ./raineywrapper package                # release folder + zip on the Desktop
 ./raineywrapper build game.gba --install   # convert one game on the computer
 ```
+
+Experimental: `./raineywrapper build game.gba --target mac --install` makes a standalone macOS app
+(RetroArch inside, one game per app). 2D systems work; PS2 doesn't run on Intel Macs yet.
 
 The first build creates a signing key in `~/.raineywrapper/`. Keep it: updates only install
 over apps signed with the same key.

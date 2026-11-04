@@ -190,6 +190,24 @@
       ],
       "disc": true
     },
+    "wii": {
+      "name": "Wii",
+      "core": "dolphin",
+      "extensions": [
+        "wbfs",
+        "iso",
+        "rvz",
+        "wia",
+        "gcz",
+        "ciso"
+      ],
+      "folders": [
+        "wii",
+        "wii&ngc",
+        "wiingc"
+      ],
+      "disc": true
+    },
     "xbox": {
       "name": "Xbox",
       "extensions": [

@@ -26,7 +26,7 @@ object InternalResolution {
             Level("1x (native)", Variable("pcsx2_upscale_multiplier", "1x (Native)")),
             Level("2x", Variable("pcsx2_upscale_multiplier", "2x")),
         )
-        "gamecube" -> (1..3).map { Level(if (it == 1) "1x (native)" else "${it}x", Variable("dolphin_efb_scale", "$it")) }
+        "gamecube", "wii" -> (1..3).map { Level(if (it == 1) "1x (native)" else "${it}x", Variable("dolphin_efb_scale", "$it")) }
         "dreamcast" -> listOf("640x480", "1280x960", "1920x1440").mapIndexed { i, res ->
             Level(if (i == 0) "1x (native)" else "${i + 1}x", Variable("reicast_internal_resolution", res))
         }
@@ -44,4 +44,14 @@ object InternalResolution {
         )
         else -> emptyList()
     }
+}
+
+/**
+ * What the gamepad plays as on Wii (Dolphin's dolphin_wiimote_default_device, read at startup).
+ * Most games take the Wii Remote + Nunchuk; some prefer the Classic Controller or a sideways remote.
+ */
+enum class WiiController(val label: String, val device: String) {
+    NUNCHUK("Wii Remote + Nunchuk", "nunchuk"),
+    CLASSIC("Classic Controller", "classic"),
+    SIDEWAYS("Wii Remote (sideways)", "sideways"),
 }

@@ -47,6 +47,10 @@ private:
 
     TimePoint lastFrame = MIN_TIME;
     Duration sampleInterval;
+
+    // RaineyWrapper: frame limiter for vsync mode (see wait()).
+    Duration limitInterval;
+    TimePoint limitTarget = MIN_TIME;
 };
 
 }
