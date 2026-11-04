@@ -16,20 +16,26 @@ app, or on a computer with the command-line builder.
 
 | System | Emulator inside each game app | Files |
 |---|---|---|
-| Game Boy Advance / Game Boy / Game Boy Color | mGBA | `.gba .gb .gbc` |
-| Super Nintendo | bsnes | `.sfc .smc` |
-| Genesis / Mega Drive | ClownMDEmu | `.md .gen .bin` |
+| Game Boy Advance | mGBA | `.gba` |
+| Game Boy / Game Boy Color | mGBA | `.gb .gbc .sgb` |
+| Super Nintendo | bsnes | `.sfc .smc .swc .fig` |
+| Genesis / Mega Drive | ClownMDEmu | `.md .gen .smd .bin` |
 | Master System / Game Gear | SMS Plus GX | `.sms .gg` |
 | PlayStation | PCSX ReARMed | `.cue .chd .pbp` |
 | Nintendo 64 | Mupen64Plus-Next | `.z64 .n64 .v64` |
-| PSP | PPSSPP | `.iso .cso` |
-| Dreamcast | Flycast | `.chd .cdi .gdi` |
-| GameCube | Dolphin | `.iso .rvz .gcm` |
-| Wii | Dolphin | `.wbfs .iso .rvz .wia` |
+| PSP | PPSSPP | `.iso .cso .pbp .chd` |
+| Dreamcast | Flycast | `.chd .cdi .gdi .cue` |
+| GameCube | Dolphin | `.iso .rvz .gcm .gcz .ciso` |
+| Wii | Dolphin | `.wbfs .iso .rvz .wia .gcz .ciso` |
 | PlayStation 2 (needs your own BIOS) | PCSX2 (parallel-ps2, Vulkan) | `.iso .chd .cso .cue` |
-| Xbox | opens in [hakuX](https://heldgames.com/guides/hakux-xbox-android-handhelds), installed separately | `.xiso.iso` |
+| Xbox | opens in [hakuX](https://heldgames.com/guides/hakux-xbox-android-handhelds), installed separately | `.xiso.iso`, or `.iso` in an `xbox` folder |
 
 Cartridge games can also be inside `.zip` files.
+
+The emulators listed are the ones in the released APK. Builds made with `./raineywrapper converter`
+without `--public` use Snes9x for Super Nintendo and Genesis Plus GX for Genesis, Master System
+and Game Gear instead; those two are licensed for non-commercial use only, so they aren't in the
+released APK.
 
 ## Install
 
