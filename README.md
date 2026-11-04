@@ -14,22 +14,32 @@ app, or on a computer with the command-line builder.
 
 ## Supported systems
 
+<!-- systems-table:start (generated from builder/systems.json by ./raineywrapper readme) -->
 | System | Emulator inside each game app | Files |
 |---|---|---|
-| Game Boy Advance / Game Boy / Game Boy Color | mGBA | `.gba .gb .gbc` |
-| Super Nintendo | bsnes | `.sfc .smc` |
-| Genesis / Mega Drive | ClownMDEmu | `.md .gen .bin` |
-| Master System / Game Gear | SMS Plus GX | `.sms .gg` |
+| Game Boy Advance | mGBA | `.gba` |
+| Game Boy / Game Boy Color | mGBA | `.gb .gbc .sgb` |
 | PlayStation | PCSX ReARMed | `.cue .chd .pbp` |
-| Nintendo 64 | Mupen64Plus-Next | `.z64 .n64 .v64` |
-| PSP | PPSSPP | `.iso .cso` |
-| Dreamcast | Flycast | `.chd .cdi .gdi` |
-| GameCube | Dolphin | `.iso .rvz .gcm` |
-| Wii | Dolphin | `.wbfs .iso .rvz .wia` |
+| Super Nintendo | bsnes | `.sfc .smc .swc .fig` |
+| Sega Genesis / Mega Drive | ClownMDEmu | `.md .gen .smd .bin` |
+| Sega Master System | SMS Plus GX | `.sms` |
+| Sega Game Gear | SMS Plus GX | `.gg` |
+| Nintendo 64 | Mupen64Plus-Next | `.n64 .z64 .v64` |
+| Sega Dreamcast | Flycast | `.chd .cdi .gdi .cue` |
 | PlayStation 2 (needs your own BIOS) | PCSX2 (parallel-ps2, Vulkan) | `.iso .chd .cso .cue` |
-| Xbox | opens in [hakuX](https://heldgames.com/guides/hakux-xbox-android-handhelds), installed separately | `.xiso.iso` |
+| PlayStation Portable | PPSSPP | `.iso .cso .pbp .chd` |
+| GameCube | Dolphin | `.iso .rvz .gcm .gcz .ciso` |
+| Wii | Dolphin | `.wbfs .iso .rvz .wia .gcz .ciso` |
+| Xbox | opens in [hakuX](https://heldgames.com/guides/hakux-xbox-android-handhelds), installed separately | `.xiso.iso .iso` |
+| PlayStation 3 (install the PS3 firmware in aPS3e first) | opens in [aPS3e](https://play.google.com/store/apps/details?id=aenu.aps3e), installed separately | `.iso` |
+<!-- systems-table:end -->
 
 Cartridge games can also be inside `.zip` files.
+
+The emulators listed are the ones in the released APK. Builds made with `./raineywrapper converter`
+without `--public` use Snes9x for Super Nintendo and Genesis Plus GX for Genesis, Master System
+and Game Gear instead; those two are licensed for non-commercial use only, so they aren't in the
+released APK.
 
 ## Install
 
@@ -65,8 +75,11 @@ and 120 Hz.
 ### Tips
 
 - Put games in folders named after their system (`psx`, `ps2`, `dreamcast`, `gamecube`, …) so
-  shared formats like `.chd` and `.iso` are detected correctly. (GameCube and Wii discs are told
-  apart automatically.) You can also pick the system by hand.
+  shared formats like `.chd` and `.iso` are detected correctly. (GameCube, Wii and PS3 discs are
+  recognised automatically.) You can also pick the system by hand.
+- PS3 games open in [aPS3e](https://play.google.com/store/apps/details?id=aenu.aps3e) (Android 10+,
+  arm64, Vulkan), which you install separately. Install the PS3 firmware in aPS3e before playing.
+  Only `.iso` disc images are supported so far; PS3 games stored as a folder (`PS3_GAME`) aren't.
 - PS2 needs a BIOS dumped from your own console: put the 4 MB `.bin` in a `bios` folder (for
   example `ps2/bios`) and RaineyWrapper bundles the one matching the game's region.
 - A Dreamcast BIOS in `bios/dc/` is used automatically when present (optional).
@@ -81,11 +94,16 @@ cores/fetch_cores.sh mgba pcsx_rearmed snes9x genesis_plus_gx mupen64plus_next_g
 ./raineywrapper doctor                 # checks the toolchain and says what's missing
 ./raineywrapper converter --public     # build the RaineyWrapper app (distributable cores)
 ./raineywrapper package                # release folder + zip on the Desktop
+./raineywrapper readme                 # rewrite the supported-systems tables from builder/systems.json
 ./raineywrapper build game.gba --install   # convert one game on the computer
 ```
 
 Experimental: `./raineywrapper build game.gba --target mac --install` makes a standalone macOS app
 (RetroArch inside, one game per app). 2D systems work; PS2 doesn't run on Intel Macs yet.
+
+The supported-systems tables in `README.md` and `README-public.txt` are generated: edit
+`builder/systems.json`, then run `./raineywrapper readme` (`package` does this too, and
+`./raineywrapper readme --check` exits 1 when they're out of date).
 
 The first build creates a signing key in `~/.raineywrapper/`. Keep it: updates only install
 over apps signed with the same key.

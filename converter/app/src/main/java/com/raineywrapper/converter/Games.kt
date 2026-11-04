@@ -28,6 +28,8 @@ data class GameSystem(
     val bios: List<String>,
     /** The game can't start without a BIOS (PS2). */
     val biosRequired: Boolean,
+    /** Shown on the convert screen, e.g. "install the PS3 firmware in aPS3e first". */
+    val note: String? = null,
 ) {
     val coreLibrary get() = core?.let { "lib${it}_libretro_android.so" }
     val isExternal get() = external.isNotEmpty()
@@ -78,6 +80,7 @@ object Systems {
                 } ?: emptyList(),
                 bios = s.optJSONArray("bios")?.strings() ?: emptyList(),
                 biosRequired = s.optBoolean("biosRequired", false),
+                note = s.optString("note").ifEmpty { null },
             )
         }.toList().also { cache = it }
     }
@@ -96,11 +99,24 @@ object Systems {
             val kind = nintendoDisc(file)
             candidates = candidates.filter { it.id == kind }.ifEmpty { candidates }
         }
+        if (candidates.any { it.id == "ps3" } && isPs3Disc(file)) return candidates.first { it.id == "ps3" }
         val folders = generateSequence(file.parentFile) { it.parentFile }.take(2).map { it.name.lowercase() }.toList()
         return candidates.firstOrNull { sys -> folders.any { it in sys.folders } } ?: candidates.first()
     }
 
     fun supportedExtensions(context: Context) = all(context).flatMap { it.extensions }.toSet() + "zip"
+
+    /** PS3 disc images are ISO 9660 with the volume name "PS3VOLUME" (primary volume descriptor, sector 16). */
+    private fun isPs3Disc(file: File): Boolean = try {
+        java.io.RandomAccessFile(file, "r").use { f ->
+            if (f.length() < 0x8028 + 9) return false
+            f.seek(0x8028)
+            val name = ByteArray(9).also { f.readFully(it) }
+            String(name, Charsets.US_ASCII) == "PS3VOLUME"
+        }
+    } catch (e: Exception) {
+        false
+    }
 
     /** "wii" or "gamecube" from the disc header (both use .iso, .rvz, .gcz...), or null. */
     private fun nintendoDisc(file: File): String? = try {

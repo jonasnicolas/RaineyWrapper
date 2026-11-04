@@ -12,21 +12,27 @@ No games are included. You need your own legally obtained game backups or homebr
 
 SUPPORTED SYSTEMS
 -----------------
+<<systems-list:start>>
 Built in (nothing else to install):
-  - Game Boy Advance, Game Boy, Game Boy Color   (.gba .gb .gbc)
-  - Super Nintendo                               (.sfc .smc)
-  - Sega Genesis / Mega Drive                    (.md .gen .bin)
-  - Sega Master System, Game Gear                (.sms .gg)
-  - PlayStation                                  (.cue .chd .pbp)
-  - Nintendo 64                                  (.z64 .n64 .v64)
-  - PSP                                          (.iso .cso)
-  - Dreamcast                                    (.chd .cdi .gdi)
-  - GameCube                                     (.iso .rvz .gcm)
-  - Wii                                          (.wbfs .iso .rvz .wia)
-  - PlayStation 2 (needs your own PS2 BIOS)      (.iso .chd .cso .cue)
+  - Game Boy Advance                     (.gba)
+  - Game Boy / Game Boy Color            (.gb .gbc .sgb)
+  - PlayStation                          (.cue .chd .pbp)
+  - Super Nintendo                       (.sfc .smc .swc .fig)
+  - Sega Genesis / Mega Drive            (.md .gen .smd .bin)
+  - Sega Master System                   (.sms)
+  - Sega Game Gear                       (.gg)
+  - Nintendo 64                          (.n64 .z64 .v64)
+  - Sega Dreamcast                       (.chd .cdi .gdi .cue)
+  - PlayStation 2 (needs your own BIOS)  (.iso .chd .cso .cue)
+  - PlayStation Portable                 (.iso .cso .pbp .chd)
+  - GameCube                             (.iso .rvz .gcm .gcz .ciso)
+  - Wii                                  (.wbfs .iso .rvz .wia .gcz .ciso)
 
 Needs an emulator app installed (the game's icon opens it straight into the game):
-  - Xbox            hakuX                          (.xiso.iso .iso)
+  - Xbox: opens in hakuX                 (.xiso.iso .iso)
+  - PlayStation 3: opens in aPS3e        (.iso)
+      Install the PS3 firmware in aPS3e first.
+<<systems-list:end>>
 
 ROMs inside .zip files work for cartridge systems.
 
@@ -72,7 +78,7 @@ PLAYING
 - Converting a game that's already installed updates it and keeps its saves.
 
 Folder names help tell systems apart: put games in folders named psx, psp, ps2,
-dreamcast, n64, snes, megadrive, gamegear and so on. You can also change the system
+ps3, dreamcast, n64, snes, megadrive, gamegear and so on. You can also change the system
 on the convert screen.
 
 
@@ -85,6 +91,15 @@ includes it automatically, picking the one that matches the game's region.
 PS2, GameCube and Wii need a fast device; on mid-range chips many games run at full speed,
 but the most demanding ones may slow down. Dreamcast games run without a BIOS; if a dc_boot.bin is
 found in a "bios/dc" folder it's included automatically for better compatibility.
+
+
+PS3
+---
+PS3 games open in aPS3e (Google Play; needs Android 10+, a 64-bit device and Vulkan), which
+you install separately. Install the PS3 firmware in aPS3e before playing. Only .iso disc
+images work so far; PS3 games stored as a folder (PS3_GAME) don't. PS3 discs are recognised
+automatically, or put them in a folder named ps3. PS3 emulation on Android is experimental,
+so many games won't run well yet.
 
 
 LICENSE
