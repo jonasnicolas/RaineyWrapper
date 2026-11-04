@@ -7,6 +7,9 @@ fun prop(name: String, default: String) = (findProperty(name) as String?) ?: def
 
 val raineywrapperVersionCode = prop("raineywrapperVersionCode", "1").toInt()
 val raineywrapperKeystore = findProperty("raineywrapperKeystore") as String?
+// A test build can install next to the regular app: its own app ID, name and on-device game-signing key.
+val raineywrapperAppIdSuffix = prop("raineywrapperAppIdSuffix", "")
+val raineywrapperAppLabel = prop("raineywrapperAppLabel", "@string/app_name")
 
 android {
     namespace = "com.raineywrapper.converter"
@@ -14,6 +17,8 @@ android {
 
     defaultConfig {
         applicationId = "com.raineywrapper.converter"
+        applicationIdSuffix = raineywrapperAppIdSuffix.ifEmpty { null }
+        manifestPlaceholders["appLabel"] = raineywrapperAppLabel
         minSdk = 26
         targetSdk = 37
         versionCode = raineywrapperVersionCode

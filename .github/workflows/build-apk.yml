@@ -1,0 +1,115 @@
+name: Build APK
+
+# Builds the RaineyWrapper converter app (the public variant, with the same emulators as the
+# released APK) and uploads it as a download on the run's page. Start it from the Actions tab:
+# Build APK -> Run workflow. It also runs on pull requests that change the apps or the builder,
+# so code that doesn't compile is caught before it's merged; those builds are side by side.
+#
+# Signing: Android only installs an update over an app signed with the same key. Add your key
+# as repository secrets to build updates for the app you already have:
+#   RAINEYWRAPPER_KEYSTORE_B64     base64 of ~/.raineywrapper/release.keystore
+#   RAINEYWRAPPER_STORE_PASSWORD   storePassword from ~/.raineywrapper/keystore.properties
+#   RAINEYWRAPPER_KEY_ALIAS        keyAlias from that file (optional; default raineywrapper)
+# Without them each run signs with a new throwaway key, so keep "side by side" on: the build
+# then installs as a separate "RaineyWrapper Test" app next to your current one.
+on:
+  workflow_dispatch:
+    inputs:
+      side_by_side:
+        description: Install as a separate "RaineyWrapper Test" app next to your current RaineyWrapper
+        type: boolean
+        default: true
+  pull_request:
+    paths:
+      - converter/**
+      - player-template/**
+      - libretrodroid/**
+      - builder/**
+      - cores/**
+      - .github/workflows/build-apk.yml
+
+concurrency:
+  group: build-apk-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      # Pull request builds are always side by side; manual runs follow the checkbox.
+      SIDE_BY_SIDE: ${{ github.event_name != 'workflow_dispatch' || inputs.side_by_side }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # Versions from README.md (Building from source).
+      - name: Install Android SDK packages
+        run: |
+          sm="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          yes | "$sm" --licenses > /dev/null
+          list="$("$sm" --list 2>/dev/null)"
+          # Pick the newest API 37 platform and build-tools the SDK offers (names vary: android-37, android-37.0).
+          platform="$(printf '%s\n' "$list" | grep -oE 'platforms;android-37(\.[0-9]+)?' | sort -uV | tail -1)"
+          build_tools="$(printf '%s\n' "$list" | grep -oE 'build-tools;37\.[0-9.]+' | grep -v rc | sort -uV | tail -1)"
+          if [ -z "$platform" ] || [ -z "$build_tools" ]; then
+            echo "::error::Android SDK platform/build-tools 37 not found in sdkmanager --list"
+            exit 1
+          fi
+          echo "Installing $platform $build_tools"
+          "$sm" "$platform" "$build_tools" "platform-tools" "ndk;29.0.14206865" "cmake;3.22.1" > /dev/null
+
+      - name: Download emulator cores
+        run: cores/fetch_cores.sh mgba pcsx_rearmed snes9x genesis_plus_gx mupen64plus_next_gles3 ppsspp dolphin flycast pcsx2
+
+      - name: Signing key
+        env:
+          KEYSTORE_B64: ${{ secrets.RAINEYWRAPPER_KEYSTORE_B64 }}
+          STORE_PASSWORD: ${{ secrets.RAINEYWRAPPER_STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.RAINEYWRAPPER_KEY_ALIAS }}
+        run: |
+          if [ -n "$KEYSTORE_B64" ] && [ -n "$STORE_PASSWORD" ]; then
+            mkdir -p -m 700 ~/.raineywrapper
+            printf '%s' "$KEYSTORE_B64" | base64 -d > ~/.raineywrapper/release.keystore
+            printf 'storePassword=%s\nkeyAlias=%s\n' "$STORE_PASSWORD" "${KEY_ALIAS:-raineywrapper}" > ~/.raineywrapper/keystore.properties
+            chmod 600 ~/.raineywrapper/*
+            echo "Signing with the key from repository secrets."
+          else
+            echo "::warning::No signing key in repository secrets: this build is signed with a new throwaway key. It can't install over an existing RaineyWrapper; use the side-by-side option."
+          fi
+
+      - name: Build
+        env:
+          ORG_GRADLE_PROJECT_raineywrapperAppIdSuffix: ${{ env.SIDE_BY_SIDE == 'true' && '.test' || '' }}
+          ORG_GRADLE_PROJECT_raineywrapperAppLabel: ${{ env.SIDE_BY_SIDE == 'true' && 'RaineyWrapper Test' || '@string/app_name' }}
+        run: ./raineywrapper converter --public
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.SIDE_BY_SIDE == 'true' && 'RaineyWrapper-Test-apk' || 'RaineyWrapper-apk' }}
+          path: output/public/RaineyWrapper.apk
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Summary
+        run: |
+          {
+            echo "## RaineyWrapper APK"
+            echo
+            echo "Download it under **Artifacts** below, unzip it, copy RaineyWrapper.apk to your handheld and open it there."
+            if [ "$SIDE_BY_SIDE" = "true" ]; then
+              echo
+              echo "This is a side-by-side build: it installs as **RaineyWrapper Test**, next to your current RaineyWrapper, and makes its own signing key for the games it converts."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
