@@ -14,21 +14,24 @@ app, or on a computer with the command-line builder.
 
 ## Supported systems
 
+<!-- systems-table:start (generated from builder/systems.json by ./raineywrapper readme) -->
 | System | Emulator inside each game app | Files |
 |---|---|---|
 | Game Boy Advance | mGBA | `.gba` |
 | Game Boy / Game Boy Color | mGBA | `.gb .gbc .sgb` |
-| Super Nintendo | bsnes | `.sfc .smc .swc .fig` |
-| Genesis / Mega Drive | ClownMDEmu | `.md .gen .smd .bin` |
-| Master System / Game Gear | SMS Plus GX | `.sms .gg` |
 | PlayStation | PCSX ReARMed | `.cue .chd .pbp` |
-| Nintendo 64 | Mupen64Plus-Next | `.z64 .n64 .v64` |
-| PSP | PPSSPP | `.iso .cso .pbp .chd` |
-| Dreamcast | Flycast | `.chd .cdi .gdi .cue` |
+| Super Nintendo | bsnes | `.sfc .smc .swc .fig` |
+| Sega Genesis / Mega Drive | ClownMDEmu | `.md .gen .smd .bin` |
+| Sega Master System | SMS Plus GX | `.sms` |
+| Sega Game Gear | SMS Plus GX | `.gg` |
+| Nintendo 64 | Mupen64Plus-Next | `.n64 .z64 .v64` |
+| Sega Dreamcast | Flycast | `.chd .cdi .gdi .cue` |
+| PlayStation 2 (needs your own BIOS) | PCSX2 (parallel-ps2, Vulkan) | `.iso .chd .cso .cue` |
+| PlayStation Portable | PPSSPP | `.iso .cso .pbp .chd` |
 | GameCube | Dolphin | `.iso .rvz .gcm .gcz .ciso` |
 | Wii | Dolphin | `.wbfs .iso .rvz .wia .gcz .ciso` |
-| PlayStation 2 (needs your own BIOS) | PCSX2 (parallel-ps2, Vulkan) | `.iso .chd .cso .cue` |
-| Xbox | opens in [hakuX](https://heldgames.com/guides/hakux-xbox-android-handhelds), installed separately | `.xiso.iso`, or `.iso` in an `xbox` folder |
+| Xbox | opens in [hakuX](https://heldgames.com/guides/hakux-xbox-android-handhelds), installed separately | `.xiso.iso .iso` |
+<!-- systems-table:end -->
 
 Cartridge games can also be inside `.zip` files.
 
@@ -87,11 +90,16 @@ cores/fetch_cores.sh mgba pcsx_rearmed snes9x genesis_plus_gx mupen64plus_next_g
 ./raineywrapper doctor                 # checks the toolchain and says what's missing
 ./raineywrapper converter --public     # build the RaineyWrapper app (distributable cores)
 ./raineywrapper package                # release folder + zip on the Desktop
+./raineywrapper readme                 # rewrite the supported-systems tables from builder/systems.json
 ./raineywrapper build game.gba --install   # convert one game on the computer
 ```
 
 Experimental: `./raineywrapper build game.gba --target mac --install` makes a standalone macOS app
 (RetroArch inside, one game per app). 2D systems work; PS2 doesn't run on Intel Macs yet.
+
+The supported-systems tables in `README.md` and `README-public.txt` are generated: edit
+`builder/systems.json`, then run `./raineywrapper readme` (`package` does this too, and
+`./raineywrapper readme --check` exits 1 when they're out of date).
 
 The first build creates a signing key in `~/.raineywrapper/`. Keep it: updates only install
 over apps signed with the same key.

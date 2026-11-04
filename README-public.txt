@@ -12,21 +12,25 @@ No games are included. You need your own legally obtained game backups or homebr
 
 SUPPORTED SYSTEMS
 -----------------
+<<systems-list:start>>
 Built in (nothing else to install):
-  - Game Boy Advance, Game Boy, Game Boy Color   (.gba .gb .gbc .sgb)
-  - Super Nintendo                               (.sfc .smc .swc .fig)
-  - Sega Genesis / Mega Drive                    (.md .gen .smd .bin)
-  - Sega Master System, Game Gear                (.sms .gg)
-  - PlayStation                                  (.cue .chd .pbp)
-  - Nintendo 64                                  (.z64 .n64 .v64)
-  - PSP                                          (.iso .cso .pbp .chd)
-  - Dreamcast                                    (.chd .cdi .gdi .cue)
-  - GameCube                                     (.iso .rvz .gcm .gcz .ciso)
-  - Wii                                          (.wbfs .iso .rvz .wia .gcz .ciso)
-  - PlayStation 2 (needs your own PS2 BIOS)      (.iso .chd .cso .cue)
+  - Game Boy Advance                     (.gba)
+  - Game Boy / Game Boy Color            (.gb .gbc .sgb)
+  - PlayStation                          (.cue .chd .pbp)
+  - Super Nintendo                       (.sfc .smc .swc .fig)
+  - Sega Genesis / Mega Drive            (.md .gen .smd .bin)
+  - Sega Master System                   (.sms)
+  - Sega Game Gear                       (.gg)
+  - Nintendo 64                          (.n64 .z64 .v64)
+  - Sega Dreamcast                       (.chd .cdi .gdi .cue)
+  - PlayStation 2 (needs your own BIOS)  (.iso .chd .cso .cue)
+  - PlayStation Portable                 (.iso .cso .pbp .chd)
+  - GameCube                             (.iso .rvz .gcm .gcz .ciso)
+  - Wii                                  (.wbfs .iso .rvz .wia .gcz .ciso)
 
 Needs an emulator app installed (the game's icon opens it straight into the game):
-  - Xbox            hakuX                          (.xiso.iso .iso)
+  - Xbox: opens in hakuX                 (.xiso.iso .iso)
+<<systems-list:end>>
 
 ROMs inside .zip files work for cartridge systems.
 

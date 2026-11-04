@@ -1,5 +1,19 @@
 {
-  "_comment": "Maps ROM file extensions to a system. 'core' is the libretro buildbot core name (cores/fetch_cores.sh <core>). When an extension belongs to several systems, the one whose 'folders' contains the ROM's folder name wins, else the first listed. 'external' systems have no bundled core: the game app launches an installed emulator app instead (on-device converter only). 'bios' lists optional BIOS file names (relative to the core's system folder) that the on-device converter bundles when it finds them in a bios folder. An external emulator with \"uri\": \"path\" gets the plain file path instead of a content:// URI (NetherSX2 checks the file exists by path). 'publicCore' replaces a non-commercially licensed core with a GPL-compatible one in the public (distributable) build of the converter: ./raineywrapper converter --public. A 'bios' entry may end in '*.bin' (any matching file is accepted, e.g. PS2 BIOS dumps have model-specific names); 'biosRequired' means the game can't start without one. Files named '*.xiso.iso' are treated as extension 'xiso' (Xbox), wherever they are.",
+  "_comment": "Maps ROM file extensions to a system. 'core' is the libretro buildbot core name (cores/fetch_cores.sh <core>). When an extension belongs to several systems, the one whose 'folders' contains the ROM's folder name wins, else the first listed. 'external' systems have no bundled core: the game app launches an installed emulator app instead (on-device converter only). 'bios' lists optional BIOS file names (relative to the core's system folder) that the on-device converter bundles when it finds them in a bios folder. An external emulator with \"uri\": \"path\" gets the plain file path instead of a content:// URI (NetherSX2 checks the file exists by path). 'publicCore' replaces a non-commercially licensed core with a GPL-compatible one in the public (distributable) build of the converter: ./raineywrapper converter --public. A 'bios' entry may end in '*.bin' (any matching file is accepted, e.g. PS2 BIOS dumps have model-specific names); 'biosRequired' means the game can't start without one. Files named '*.xiso.iso' are treated as extension 'xiso' (Xbox), wherever they are. 'coreNames' gives each core's display name, and an external emulator's optional 'url' links to it; both are used by ./raineywrapper readme, which writes the supported-systems tables in README.md and README-public.txt.",
+  "coreNames": {
+    "mgba": "mGBA",
+    "snes9x": "Snes9x",
+    "bsnes": "bsnes",
+    "genesis_plus_gx": "Genesis Plus GX",
+    "clownmdemu": "ClownMDEmu",
+    "smsplus": "SMS Plus GX",
+    "pcsx_rearmed": "PCSX ReARMed",
+    "mupen64plus_next_gles3": "Mupen64Plus-Next",
+    "ppsspp": "PPSSPP",
+    "flycast": "Flycast",
+    "dolphin": "Dolphin",
+    "pcsx2": "PCSX2 (parallel-ps2, Vulkan)"
+  },
   "systems": {
     "gba": {
       "name": "Game Boy Advance",
@@ -224,6 +238,7 @@
       "external": [
         {
           "name": "hakuX",
+          "url": "https://heldgames.com/guides/hakux-xbox-android-handhelds",
           "package": "com.rfandango.haku_x",
           "activity": "com.rfandango.haku_x.LauncherActivity",
           "action": "android.intent.action.VIEW"

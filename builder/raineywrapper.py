@@ -22,6 +22,7 @@ from xml.sax.saxutils import escape
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import doctor  # noqa: E402
+import readme  # noqa: E402
 from doctor import SetupError, Toolchain  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -617,13 +618,15 @@ def write_source_zip(out: Path) -> int:
 
 def package_public(tc: Toolchain, dest: Path) -> Path:
     """Builds the public converter and writes the upload folder + zip: APK, README, licenses, source."""
+    for path in readme.update():
+        log(f"Updated the supported-systems table in {path.name} from systems.json")
     apk = build_converter(tc, False, public=True)
     version = converter_version()
     folder = dest / f"RaineyWrapper-{version}"
     shutil.rmtree(folder, ignore_errors=True)
     folder.mkdir(parents=True)
     shutil.copyfile(apk, folder / f"RaineyWrapper-{version}.apk")
-    shutil.copyfile(ROOT / "README-public.txt", folder / "README.txt")
+    (folder / "README.txt").write_text(readme.strip_markers((ROOT / "README-public.txt").read_text()))
     shutil.copyfile(ROOT / "LICENSES-public.md", folder / "LICENSES.md")
     shutil.copyfile(ROOT / "LICENSE", folder / "LICENSE.txt")
     files = write_source_zip(folder / "RaineyWrapper-source.zip")
@@ -661,11 +664,25 @@ def main() -> int:
     c.add_argument("--install", action="store_true", help="install on the connected device with adb")
     c.add_argument("--public", action="store_true",
                    help="distributable variant: swaps non-commercial cores for GPL-compatible ones; output/public/")
+    r = sub.add_parser("readme", help="write the supported-systems tables in the READMEs from systems.json")
+    r.add_argument("--check", action="store_true", help="only report whether they're up to date (exit 1 if not)")
 
     args = parser.parse_args()
     global SYSTEM_OVERRIDE
     SYSTEM_OVERRIDE = getattr(args, "system", None)
     try:
+        if args.command == "readme":
+            # Only reads systems.json and the READMEs: no JDK or Android SDK needed.
+            if args.check:
+                out_of_date = readme.stale()
+                for path in out_of_date:
+                    log(f"{path.name}: supported-systems table is out of date; run ./raineywrapper readme")
+                if not out_of_date:
+                    log("Supported-systems tables match systems.json.")
+                return 1 if out_of_date else 0
+            changed = readme.update()
+            log("Updated " + ", ".join(p.name for p in changed) if changed else "Tables already match systems.json.")
+            return 0
         if args.command == "build" and args.target == "mac":
             # macOS apps need no JDK/Android SDK, only Pillow for the icon.
             doctor.check_pillow()
@@ -703,7 +720,7 @@ def main() -> int:
             raise BuildError(f"BIOS not found: {args.bios}")
         build_one(tc, args.rom, args.title, args.icon, args.package_suffix, args.install, args.bios)
         return 0
-    except (SetupError, BuildError) as e:
+    except (SetupError, BuildError, readme.ReadmeError) as e:
         print(f"\n[raineywrapper] ERROR: {e}", file=sys.stderr)
         return 1
 
