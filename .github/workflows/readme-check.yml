@@ -1,0 +1,36 @@
+name: README tables
+
+# Fails when the supported-systems tables in README.md / README-public.txt
+# don't match builder/systems.json. Fix: ./raineywrapper readme, then commit.
+on:
+  push:
+    branches: [main]
+    paths:
+      - builder/systems.json
+      - builder/readme.py
+      - builder/raineywrapper.py
+      - README.md
+      - README-public.txt
+      - .github/workflows/readme-check.yml
+  pull_request:
+    paths:
+      - builder/systems.json
+      - builder/readme.py
+      - builder/raineywrapper.py
+      - README.md
+      - README-public.txt
+      - .github/workflows/readme-check.yml
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      # Only needs the standard library: no JDK, Android SDK or Pillow.
+      - run: python builder/raineywrapper.py readme --check
